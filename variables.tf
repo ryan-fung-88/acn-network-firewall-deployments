@@ -1,1 +1,4 @@
-# Insert Terraform code here
+variable "region" {
+  type = string
+  default = "us-east-1"
+}
