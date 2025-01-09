@@ -2,7 +2,7 @@ resource "aws_networkfirewall_firewall" "this_network_firewall" {
 
   name = var.firewall_name
   vpc_id = var.vpc_id
-  firewall_policy_arn = aws_networkfirewall_firewall_policy.this_networkfirewall_policy.arn
+  firewall_policy_arn = aws_networkfirewall_firewall_policy.example.arn
 
   dynamic "subnet_mapping" {
     for_each = var.endpoint_subnets
@@ -16,7 +16,7 @@ resource "aws_networkfirewall_firewall" "this_network_firewall" {
   }
 }
 
-resource "aws_networkfirewall_firewall_policy" "this_networkfirewall_policy" {
+resource "aws_networkfirewall_firewall_policy" "example" {
 
   name = var.firewall_policy_name
 
@@ -26,10 +26,10 @@ resource "aws_networkfirewall_firewall_policy" "this_networkfirewall_policy" {
 
     dynamic "stateless_rule_group_reference" {
       for_each = var.stateless_rule_groups
-
+      iterator = rg
       content {
-        priority = each.value.priority
-        resource_arn = each.value.resource_arn
+        priority = rg.value.priority
+        resource_arn = rg.value.resource_arn
       }
     }
   }

@@ -83,8 +83,10 @@ variable "destination_cidr_block" {
 
 variable "transit_gateway_id" {
   type = string
+  default = ""
 }
 
 variable "vpc_endpoint_id" {
   type = string
+  default = ""
 }
