@@ -1,4 +1,4 @@
-module "spoke-vpc" {
+module "spoke-vpc-a" {
   source = "./modules/spoke-vpc"
   
   vpc_name = "spoke-vpc-a"
@@ -10,6 +10,24 @@ module "spoke-vpc" {
   avalibility_zones = ["${var.region}a", "${var.region}b"]
   multiple_public_route_tables = true
   multiple_private_route_tables = true
+  destination_cidr_block = "0.0.0.0/0"
+  transit_gateway_id = module.transit_gateway.tgw_id
+}
+
+module "spoke-vpc-b" {
+  source = "./modules/spoke-vpc"
+  
+  vpc_name = "spoke-vpc-b"
+  cidr = "10.102.0.0/16"
+  instance_tenancy = "default"
+  enable_dns_support = true
+  public_subnets = ["10.102.1.0/24", "10.102.2.0/24"]
+  private_subnets = ["10.102.4.0/24", "10.102.5.0/24"]
+  avalibility_zones = ["${var.region}a", "${var.region}b"]
+  multiple_public_route_tables = true
+  multiple_private_route_tables = true
+  destination_cidr_block = "0.0.0.0/0"
+  transit_gateway_id = module.transit_gateway.tgw_id
 }
 
 module "inspection-vpc" {
@@ -22,6 +40,36 @@ module "inspection-vpc" {
   public_subnets  = ["100.64.128.0/19", "100.64.160.0/19"]
   multiple_public_route_tables = true
   multiple_private_route_tables = true
+}
+
+module "transit_gateway" {
+  source = "./modules/transit-gateway"
+  
+  create_tgw = true
+
+  vpc_attachments = {
+    "spoke-vpc-a" = {
+      vpc_id = module.spoke-vpc-a.vpc_id
+      subnet_ids = module.spoke-vpc-a.private_subnets
+      dns_support = "enable"
+      transit_gateway_default_route_table_association = false
+      transit_gateway_default_route_table_propagation= true
+    },
+    "spoke-vpc-b" = {
+      vpc_id = module.spoke-vpc-b.vpc_id
+      subnet_ids = module.spoke-vpc-b.private_subnets
+      dns_support = "enable"
+      transit_gateway_default_route_table_association = false
+      transit_gateway_default_route_table_propagation= true
+    },
+    "inspection-vpc" = {
+      vpc_id = module.inspection-vpc.vpc_id
+      subnet_ids = module.inspection-vpc.private_subnets
+      dns_support = "enable"
+      transit_gateway_default_route_table_association = false
+      transit_gateway_default_route_table_propagation= true
+    }
+  }
 }
 
 module "network_firewall" {
