@@ -126,7 +126,7 @@ resource "aws_ec2_transit_gateway_route_table" "firewall_rt_table" {
 
 resource "aws_ec2_transit_gateway_route" "spoke_vpc_b_tgw_route" { 
   transit_gateway_attachment_id  = module.transit_gateway.ec2_transit_gateway_vpc_attachment["spoke-vpc-b"]["id"]
-  destination_cidr_block         = mo# Change this 
+  destination_cidr_block         = "0.0.0.0/0" # Change this 
   transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.firewall_rt_table.id
 
 }
