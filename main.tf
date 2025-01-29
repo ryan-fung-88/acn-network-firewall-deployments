@@ -84,7 +84,7 @@ module "network_firewall" {
   vpc_id           = module.inspection-vpc.vpc_id
   endpoint_subnets = module.inspection-vpc.public_subnets
 
-  firewall_policy_name               = "test_firewall_policy"
+  firewall_policy_name               = "test-firewall-policy"
   stateless_default_actions          = ["aws:pass"]
   stateless_fragment_default_actions = ["aws:drop"]
   stateless_rule_groups = {
@@ -126,7 +126,7 @@ resource "aws_ec2_transit_gateway_route_table" "firewall_rt_table" {
 
 resource "aws_ec2_transit_gateway_route" "spoke_vpc_b_tgw_route" { 
   transit_gateway_attachment_id  = module.transit_gateway.ec2_transit_gateway_vpc_attachment["spoke-vpc-b"]["id"]
-  destination_cidr_block         = "0.0.0.0/0" # Change this 
+  destination_cidr_block         = module.spoke-vpc-b.vpc_cidr_block # Change this 
   transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.firewall_rt_table.id
 
 }
@@ -140,7 +140,7 @@ resource "aws_ec2_transit_gateway_route" "spoke_vpc_b_tgw_route" {
 
 resource "aws_ec2_transit_gateway_route" "spoke_vpc_a_tgw_route" {
   transit_gateway_attachment_id  = module.transit_gateway.ec2_transit_gateway_vpc_attachment["spoke-vpc-a"]["id"]
-  destination_cidr_block         = "0.0.0.0/0"
+  destination_cidr_block         = module.spoke-vpc-a.vpc_cidr_block
   transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.firewall_rt_table.id
 
 }
