@@ -40,6 +40,13 @@ module "inspection-vpc" {
   public_subnets                = ["100.64.128.0/19", "100.64.160.0/19"]
   multiple_public_route_tables  = true
   multiple_private_route_tables = true
+  vpc_endpoint_id = (module.network_firewall.firewall_status[0].sync_states[*].attachment[0].endpoint_id)[count.index]
+  transit_gateway_id = module.transit_gateway.tgw_id
+
+   depends_on = [
+    module.network_firewall,
+    module.transit_gateway
+  ]
 }
 
 module "transit_gateway" {
@@ -94,74 +101,6 @@ module "network_firewall" {
     },
   }
 }
-#------------------------------------------------------------------------
-# Egress Transit Gateway  Route Table
-#------------------------------------------------------------------------
-
-resource "aws_ec2_transit_gateway_route_table" "egress_rt_table" {
-  transit_gateway_id = module.transit_gateway.tgw_id
-  tags = {
-    Name = "egress-route-table"
-  }
-
-}
-
-resource "aws_ec2_transit_gateway_route" "inspection_vpc_route" {
-  transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.egress_rt_table.id
-  destination_cidr_block         = "0.0.0.0/0"
-  transit_gateway_attachment_id  = module.transit_gateway.ec2_transit_gateway_vpc_attachment["inspection-vpc"]["id"]
-
-}
-
-#------------------------------------------------------------------------
-# Firewall  Transit Gateway  Route Table
-#------------------------------------------------------------------------
-resource "aws_ec2_transit_gateway_route_table" "firewall_rt_table" {
-  transit_gateway_id = module.transit_gateway.tgw_id
-  tags = {
-    Name = "firewall-route-table"
-  }
-
-}
-
-resource "aws_ec2_transit_gateway_route" "spoke_vpc_b_tgw_route" { 
-  transit_gateway_attachment_id  = module.transit_gateway.ec2_transit_gateway_vpc_attachment["spoke-vpc-b"]["id"]
-  destination_cidr_block         = module.spoke-vpc-b.vpc_cidr_block # Change this 
-  transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.firewall_rt_table.id
-
-}
-
-# resource "aws_ec2_transit_gateway_route" "egress_vpc_attachment" {
-#   transit_gateway_attachment_id  = module.transit_gateway.ec2_transit_gateway_vpc_attachment["egress_vpc"]["id"]
-#   destination_cidr_block         = "0.0.0.0/0"
-#   transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.firewall_rt_table.id
-
-# }
-
-resource "aws_ec2_transit_gateway_route" "spoke_vpc_a_tgw_route" {
-  transit_gateway_attachment_id  = module.transit_gateway.ec2_transit_gateway_vpc_attachment["spoke-vpc-a"]["id"]
-  destination_cidr_block         = module.spoke-vpc-a.vpc_cidr_block
-  transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.firewall_rt_table.id
-
-}
-
-#------------------------------------------------------------------------
-# Spoke  Transit Gateway  Route Table
-#------------------------------------------------------------------------
-resource "aws_ec2_transit_gateway_route_table" "spoke_rt_table" {
-  transit_gateway_id = module.transit_gateway.tgw_id
-  tags = {
-    Name = "spoke-route-table"
-  }
-
-}
-
-resource "aws_ec2_transit_gateway_route" "inspection_vpc_tgw_route" {
-  transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.spoke_rt_table.id
-  destination_cidr_block         = "0.0.0.0/0"
-  transit_gateway_attachment_id  = module.transit_gateway.ec2_transit_gateway_vpc_attachment["inspection-vpc"]["id"]
-
-}
 
 resource "aws_networkfirewall_rule_group" "drop_icmp_traffic_fw_rule_group" {
   name     = "drop-icmp-traffic-fw-rule-group"
@@ -191,3 +130,71 @@ resource "aws_networkfirewall_rule_group" "drop_icmp_traffic_fw_rule_group" {
   }
 
 }
+
+#------------------------------------------------------------------------
+# Egress Transit Gateway  Route Table
+
+# resource "aws_ec2_transit_gateway_route_table" "egress_rt_table" {
+#   transit_gateway_id = module.transit_gateway.tgw_id
+#   tags = {
+#     Name = "egress-route-table"
+#   }
+
+# }
+
+# resource "aws_ec2_transit_gateway_route" "inspection_vpc_route" {
+#   transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.egress_rt_table.id
+#   destination_cidr_block         = "0.0.0.0/0"
+#   transit_gateway_attachment_id  = module.transit_gateway.ec2_transit_gateway_vpc_attachment["inspection-vpc"]["id"]
+
+# }
+
+#------------------------------------------------------------------------
+# Firewall  Transit Gateway  Route Table
+
+resource "aws_ec2_transit_gateway_route_table" "firewall_route_table" {
+  transit_gateway_id = module.transit_gateway.tgw_id
+  tags = {
+    Name = "firewall-route-table"
+  }
+
+}
+
+resource "aws_ec2_transit_gateway_route" "spoke_vpc_b_tgw_route" { 
+  transit_gateway_attachment_id  = module.transit_gateway.ec2_transit_gateway_vpc_attachment["spoke-vpc-b"]["id"]
+  destination_cidr_block         = module.spoke-vpc-b.vpc_cidr_block  
+  transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.firewall_route_table.id
+
+}
+
+# resource "aws_ec2_transit_gateway_route" "egress_vpc_attachment" {
+#   transit_gateway_attachment_id  = module.transit_gateway.ec2_transit_gateway_vpc_attachment["egress_vpc"]["id"]
+#   destination_cidr_block         = "0.0.0.0/0"
+#   transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.firewall_rt_table.id
+
+# }
+
+resource "aws_ec2_transit_gateway_route" "spoke_vpc_a_tgw_route" {
+  transit_gateway_attachment_id  = module.transit_gateway.ec2_transit_gateway_vpc_attachment["spoke-vpc-a"]["id"]
+  destination_cidr_block         = module.spoke-vpc-a.vpc_cidr_block
+  transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.firewall_route_table.id
+
+}
+
+#------------------------------------------------------------------------
+# Spoke  Transit Gateway  Route Table
+
+resource "aws_ec2_transit_gateway_route_table" "spoke_route_table" {
+  transit_gateway_id = module.transit_gateway.tgw_id
+  tags = {
+    Name = "spoke-route-table"
+  }
+
+}
+
+resource "aws_ec2_transit_gateway_route" "inspection_vpc_tgw_route" {
+  transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.spoke_route_table.id
+  destination_cidr_block         = "0.0.0.0/0"
+  transit_gateway_attachment_id  = module.transit_gateway.ec2_transit_gateway_vpc_attachment["inspection-vpc"]["id"]
+}
+

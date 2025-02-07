@@ -61,9 +61,9 @@ resource "aws_route_table_association" "private" {
 }
 
 resource "aws_route" "spoke_vpc_to_tgw" {
-  # count = local.num_public_route_tables ? local.public_subnets_count : 1
-  count = local.num_public_route_tables > 0 ? local.public_subnets_count : 1
-  route_table_id = element(aws_route_table.public_route_table[*].id,count.index)
+  count = local.public_subnets_count > 0 ? local.num_public_route_tables : 0
+  #count = local.num_public_route_tables > 0 ? local.public_subnets_count : 1
+  route_table_id = element(aws_route_table.public_route_table[*].id,var.multiple_public_route_tables ? count.index: 0)
   destination_cidr_block = var.destination_cidr_block
   transit_gateway_id = var.transit_gateway_id
 }

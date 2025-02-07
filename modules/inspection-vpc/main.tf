@@ -57,19 +57,18 @@ resource "aws_route_table_association" "private" {
   count = local.private_subnets_count > 0 ? local.private_subnets_count : 0
   subnet_id = element(aws_subnet.this_inspection_private_subnets[*].id,count.index)
   route_table_id = element(aws_route_table.private_route_table[*].id, var.multiple_private_route_tables ? count.index: 0)
-
 }
 
-# resource "aws_route" "spoke_vpc_to_tgw" {
-#   count = local.create_multiple_public_route_tables ? local.public_subnets_count : 1
-#   route_table_id = element(aws_route_table.public_route_table[*].id,count.index)
-#   destination_cidr_block = var.destination_cidr_block
-#   transit_gateway_id = var.transit_gateway_id
-# }
+resource "aws_route" "inspection_vpc_tgw_rt_route" {
+  count                  = local.private_subnets_count > 0 ? local.num_private_route_tables : 0
+  route_table_id         = element(module.inspection_vpc.private_route_table[*].id, var.multiple_private_route_tables ? count.index: 0 )
+  vpc_endpoint_id        = var.vpc_endpoint_id
+  destination_cidr_block = "0.0.0.0/0"
+}
 
-# resource "aws_route" "spoke_vpc_to_tgw" {
-#   count = local.create_multiple_public_route_tables ? local.public_subnets_count : 1
-#   route_table_id = element(aws_route_table.public_route_table[*].id,count.index)
-#   destination_cidr_block = var.destination_cidr_block
-#   vpc_endpoint_id = var.vpc_endpoint_id
-# }
+resource "aws_route" "inspection_vpc_firewall_route" {
+  count                  = local.public_subnets_count > 0 ? local.num_public_route_tables : 0
+  route_table_id         = element(module.inspection_vpc.public_route_table[*].id,var.multiple_public_route_tables ? count.index: 0)
+  transit_gateway_id     = var.transit_gateway_id
+  destination_cidr_block = "0.0.0.0/0"
+}

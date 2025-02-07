@@ -7,7 +7,7 @@ output "public_subnets" {
 }
 
 output "private_subnets" {
-  value = aws_subnet.this_spoke_public_subnets[*].id
+  value = aws_subnet.this_spoke_private_subnets[*].id
 }
 
 output "vpc_cidr_block" {
