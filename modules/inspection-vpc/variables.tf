@@ -76,17 +76,3 @@ variable "multiple_private_route_tables" {
   default = false
 }
 
-variable "destination_cidr_block" {
-  type = string
-  default = "0.0.0.0/0"
-}
-
-variable "transit_gateway_id" {
-  type = string
-  default = ""
-}
-
-variable "vpc_endpoint_id" {
-  type = string
-  default = ""
-}

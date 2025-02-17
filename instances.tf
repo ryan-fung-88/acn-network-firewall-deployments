@@ -4,9 +4,9 @@ module "vpc_a_sg_ssh" {
 
   name        = "SSH-SG-VPC-A"
   description = "Security group for ssh  within VPC"
-  vpc_id      = module.spoke_vpc_a.vpc_id
+  vpc_id      = module.spoke-vpc-a.vpc_id
 
-  ingress_cidr_blocks = [module.spoke_vpc_a.vpc_cidr_block, module.spoke_vpc_b.vpc_cidr_block]
+  ingress_cidr_blocks = [module.spoke-vpc-a.vpc_cidr_block, module.spoke-vpc-b.vpc_cidr_block]
 }
 
 module "vpc_a_sg_https" {
@@ -15,9 +15,9 @@ module "vpc_a_sg_https" {
 
   name        = "HTTPS-SG-VPC-A"
   description = "Security group for https  within VPC"
-  vpc_id      = module.spoke_vpc_a.vpc_id
+  vpc_id      = module.spoke-vpc-a.vpc_id
 
-  ingress_cidr_blocks = [module.spoke_vpc_a.vpc_cidr_block, module.spoke_vpc_b.vpc_cidr_block]
+  ingress_cidr_blocks = [module.spoke-vpc-a.vpc_cidr_block, module.spoke-vpc-b.vpc_cidr_block]
 }
 
 module "vpc_b_sg_ssh" {
@@ -27,9 +27,9 @@ module "vpc_b_sg_ssh" {
 
   name        = "SSH-SG-VPC-B"
   description = "Security group for ssh  within VPC"
-  vpc_id      = module.spoke_vpc_b.vpc_id
+  vpc_id      = module.spoke-vpc-b.vpc_id
 
-  ingress_cidr_blocks = [module.spoke_vpc_a.vpc_cidr_block, module.spoke_vpc_b.vpc_cidr_block]
+  ingress_cidr_blocks = [module.spoke-vpc-a.vpc_cidr_block, module.spoke-vpc-b.vpc_cidr_block]
 }
 
 module "vpc_b_sg_https" {
@@ -39,9 +39,9 @@ module "vpc_b_sg_https" {
 
   name        = "HTTPS-SG-VPC-B"
   description = "Security group for https  within VPC"
-  vpc_id      = module.spoke_vpc_b.vpc_id
+  vpc_id      = module.spoke-vpc-b.vpc_id
 
-  ingress_cidr_blocks = [module.spoke_vpc_a.vpc_cidr_block, module.spoke_vpc_b.vpc_cidr_block,]
+  ingress_cidr_blocks = [module.spoke-vpc-a.vpc_cidr_block, module.spoke-vpc-b.vpc_cidr_block,]
 }
 
 resource "aws_instance" "spoke_a_instance" {
@@ -49,8 +49,8 @@ resource "aws_instance" "spoke_a_instance" {
     ami = var.ami
     instance_type = var.instance_type
     vpc_security_group_ids = [module.vpc_a_sg_ssh.security_group_id,module.vpc_a_sg_https.security_group_id]
-    subnet_id = module.spoke-vpc-a.public_subnet[0]
-    iam_instance_profile = aws_iam_instance_profile.test_profile.arn
+    subnet_id = module.spoke-vpc-a.public_subnets[0]
+    iam_instance_profile = aws_iam_instance_profile.test_profile.name
     user_data = <<EOF
     #!/bin/bash
     sleep 60;
@@ -68,8 +68,8 @@ resource "aws_instance" "spoke_b_instance" {
     ami = var.ami
     instance_type = var.instance_type
     vpc_security_group_ids = [module.vpc_b_sg_ssh.security_group_id,module.vpc_b_sg_https.security_group_id]
-    subnet_id = module.spoke-vpc-b.public_subnet[0]
-    iam_instance_profile = aws_iam_instance_profile.test_profile.arn
+    subnet_id = module.spoke-vpc-b.public_subnets[0]
+    iam_instance_profile = aws_iam_instance_profile.test_profile.name
     user_data = <<EOF
     #!/bin/bash
     sleep 60;

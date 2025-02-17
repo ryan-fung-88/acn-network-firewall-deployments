@@ -5,7 +5,7 @@ variable "region" {
 
 variable "ami" {
   type = string
-  default = "Amazon Linux 2023 AMI 2023.6.20250203.1 x86_64 HVM kernel-6.1"
+  default = "ami-053a45fff0a704a47"
 }
 
 variable "instance_type" {

@@ -21,13 +21,13 @@ data "aws_iam_policy" "ssm_policy" {
 }
 
 resource "aws_iam_policy" "iam_ssm_policy" {
-  name        = "SSM policy for EC2"
+  name        = "ssm_policy_ec2"
   description = "SSM policy for EC2"
   policy      = data.aws_iam_policy.ssm_policy.policy
 }
 
 resource "aws_iam_role_policy_attachment" "policy_to_role_attachment" {
-  role       = aws_iam_role.ec2_role.arn
+  role      = aws_iam_role.ec2_role.name
   policy_arn = aws_iam_policy.iam_ssm_policy.arn
 }
 

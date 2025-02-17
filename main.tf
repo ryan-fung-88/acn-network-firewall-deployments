@@ -40,13 +40,7 @@ module "inspection-vpc" {
   public_subnets                = ["100.64.128.0/19", "100.64.160.0/19"]
   multiple_public_route_tables  = true
   multiple_private_route_tables = true
-  vpc_endpoint_id = (module.network_firewall.firewall_status[0].sync_states[*].attachment[0].endpoint_id)[count.index]
-  transit_gateway_id = module.transit_gateway.tgw_id
 
-   depends_on = [
-    module.network_firewall,
-    module.transit_gateway
-  ]
 }
 
 module "transit_gateway" {
@@ -61,7 +55,7 @@ module "transit_gateway" {
       dns_support                                     = "enable"
       transit_gateway_default_route_table_association = false
       transit_gateway_default_route_table_propagation = true
-      transit_gateway_route_table_id                  = aws_ec2_transit_gateway_route_table.spoke_rt_table.id
+      transit_gateway_route_table_id                  = aws_ec2_transit_gateway_route_table.spoke_route_table.id
 
     },
     "spoke-vpc-b" = {
@@ -70,7 +64,7 @@ module "transit_gateway" {
       dns_support                                     = "enable"
       transit_gateway_default_route_table_association = false
       transit_gateway_default_route_table_propagation = true
-      transit_gateway_route_table_id                  = aws_ec2_transit_gateway_route_table.spoke_rt_table.id
+      transit_gateway_route_table_id                  = aws_ec2_transit_gateway_route_table.spoke_route_table.id
 
     },
     "inspection-vpc" = {
@@ -79,7 +73,7 @@ module "transit_gateway" {
       dns_support                                     = "enable"
       transit_gateway_default_route_table_association = false
       transit_gateway_default_route_table_propagation = true
-      transit_gateway_route_table_id                  = aws_ec2_transit_gateway_route_table.firewall_rt_table.id
+      transit_gateway_route_table_id                  = aws_ec2_transit_gateway_route_table.firewall_route_table.id
 
     }
   }
@@ -196,5 +190,30 @@ resource "aws_ec2_transit_gateway_route" "inspection_vpc_tgw_route" {
   transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.spoke_route_table.id
   destination_cidr_block         = "0.0.0.0/0"
   transit_gateway_attachment_id  = module.transit_gateway.ec2_transit_gateway_vpc_attachment["inspection-vpc"]["id"]
+}
+
+#---------------------------------------------------------------------------
+# Inspection VPC Firewall and TGW Route
+
+resource "aws_route" "inspection_vpc_tgw_rt_route" {
+  count                  = length(module.inspection-vpc.private_route_tables)
+  route_table_id         = element(module.inspection-vpc.private_route_tables,count.index)
+  vpc_endpoint_id        = (module.network_firewall.nfw_endpoint)[count.index]
+  destination_cidr_block = "0.0.0.0/0"
+
+  depends_on = [ 
+    module.network_firewall
+ ]
+}
+
+resource "aws_route" "inspection_vpc_firewall_route" {
+  count                  = length(module.inspection-vpc.public_route_tables)
+  route_table_id         = element(module.inspection-vpc.public_route_tables,count.index)
+  transit_gateway_id     = module.transit_gateway.tgw_id
+  destination_cidr_block = "0.0.0.0/0"
+
+  depends_on = [ 
+    module.transit_gateway
+   ]
 }
 
