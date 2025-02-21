@@ -78,6 +78,6 @@ resource "aws_instance" "spoke_b_instance" {
     yum install nc telnet -y
     EOF
     tags = {
-      Name = "test-vpc-a"
+      Name = "test-vpc-b"
     }
 }
